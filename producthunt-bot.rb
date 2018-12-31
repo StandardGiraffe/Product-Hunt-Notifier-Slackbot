@@ -47,7 +47,6 @@ class Collection
         # TODO: Have slackbot report on @stored_articles.last
       end
     end
-    update_params
   end
 
 private
@@ -56,6 +55,8 @@ private
   end
 
   def update_params
+    @params[:newer] = @latest_id
+    puts "@params updated?  @params[:newer] = #{@params[:newer]}"
     @uri.query = URI.encode_www_form(@params)
   end
 
@@ -66,9 +67,9 @@ private
   end
 
   def get_posts
+    update_params
     res = Net::HTTP.get_response(@uri)
     response = JSON.parse(res.body)
-    puts response['posts'][0]
     response['posts']
   end
 
@@ -96,4 +97,14 @@ end
 Thread.new do
   collector = Collection.new
   collector.update_collection
+  count = 0
+
+  while true do
+    count += 1
+    puts '====================='
+    puts "Starting a search... Iteration No. #{count.to_s}"
+    puts '====================='
+    collector.update_collection
+    sleep(10)
+  end
 end
