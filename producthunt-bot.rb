@@ -86,7 +86,7 @@ private
     Article.new(
       id: post['id'],
       title: post['name'],
-      url: post['redirect_url'],
+      url: post['discussion_url'],
       tagline: post['tagline'],
       timestamp: Date.parse(post['created_at']).to_time.to_i,
       topics: find_topics(post)
