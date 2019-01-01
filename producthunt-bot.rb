@@ -1,12 +1,14 @@
 # `$ foreman start` to run the bot.
 
 require 'slack-ruby-bot'
+require 'slack-notifier'
 require 'producthunt-bot/commands/hello'
 require 'producthunt-bot/bot'
 require 'net/http'
 require 'json'
 require 'date'
 
+SLACK_NOTIFIER = Slack::Notifier.new(ENV['SLACK_WEBHOOK_URL'])
 
 class Article
   attr_reader :id, :title, :url, :tagline, :timestamp, :topics
@@ -28,7 +30,7 @@ class Collection
     @stored_articles = [ ]
 
     @uri = URI('https://api.producthunt.com/v1/posts/all')
-    @latest_id = 14100
+    @latest_id = 141700
     @params = {
       access_token: ENV['PRODUCT_HUNT_KEY'],
       newer: @latest_id
@@ -45,18 +47,23 @@ class Collection
         puts "++++ Found an article! ++++"
         puts @stored_articles.last.inspect
         # TODO: Have slackbot report on @stored_articles.last
+        post_notification!(article)
       end
     end
   end
 
 private
+  def post_notification!(article)
+    SLACK_NOTIFIER.post(text: "<#{article.url}|#{article.title}>: _'#{article.tagline}'_\n<!date^#{article.timestamp}^Posted {date_short_pretty} at {time}|Timestamp unavailable, sorry.>.\n")
+  end
+
   def is_interesting?(article)
-    (article.topics & @HOT_TOPICS).length > 0 || (article.tagline.split & @HOT_TOPICS).length > 0
+    (article.topics & @HOT_TOPICS).length > 0 || (article.tagline.downcase.split & @HOT_TOPICS).length > 0
   end
 
   def update_params
     @params[:newer] = @latest_id
-    puts "@params updated?  @params[:newer] = #{@params[:newer]}"
+    puts "@params updated:  @params[:newer] = #{@params[:newer]}"
     @uri.query = URI.encode_www_form(@params)
   end
 
@@ -80,8 +87,8 @@ private
       id: post['id'],
       title: post['name'],
       url: post['redirect_url'],
-      tagline: post['tagline'].downcase,
-      timestamp: Date.parse(post['created_at']),
+      tagline: post['tagline'],
+      timestamp: Date.parse(post['created_at']).to_time.to_i,
       topics: find_topics(post)
     )
   end
@@ -105,6 +112,6 @@ Thread.new do
     puts "Starting a search... Iteration No. #{count.to_s}"
     puts '====================='
     collector.update_collection
-    sleep(10)
+    sleep(10.minutes)
   end
 end
