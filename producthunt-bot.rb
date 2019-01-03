@@ -25,12 +25,12 @@ end
 
 class Collection
   def initialize
-    @HOT_TOPICS = %w[email emails emailing emailer mailer email-marketing email-newsletters]
+    @HOT_TOPICS = %w[email emails emailing emailer mailer email-marketing]
 
     @stored_articles = [ ]
 
     @uri = URI('https://api.producthunt.com/v1/posts/all')
-    @latest_id = 141700
+    @latest_id = 142204
     @params = {
       access_token: ENV['PRODUCT_HUNT_KEY'],
       newer: @latest_id
