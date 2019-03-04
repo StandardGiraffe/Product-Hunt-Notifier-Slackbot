@@ -30,7 +30,7 @@ class Collection
     @stored_articles = [ ]
 
     @uri = URI('https://api.producthunt.com/v1/posts/all')
-    @latest_id = 142204
+    @latest_id = 142565
     @params = {
       access_token: ENV['PRODUCT_HUNT_KEY'],
       newer: @latest_id
